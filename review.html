@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>今日复习 — 韩语单词卡</title>
+  <style>
+    :root {
+      --bg:      oklch(97% 0.004 30);
+      --surface: #ffffff;
+      --fg:      oklch(22% 0.015 260);
+      --muted:   oklch(50% 0.012 260);
+      --border:  oklch(92% 0.005 30);
+      --accent:  oklch(62% 0.14 12);
+      --accent-blue: oklch(62% 0.10 235);
+      --success: oklch(60% 0.13 150);
+      --warn:    oklch(68% 0.13 85);
+      --danger:  oklch(55% 0.16 22);
+
+      --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:    'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: oklch(94% 0.006 240);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+    .app-frame {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      max-height: 932px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @media (min-width: 768px) {
+      .app-frame { border-radius: 28px; height: min(100dvh - 40px, 880px); }
+    }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px 10px;
+      flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .back-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: background 0.15s;
+    }
+    .back-btn:hover { background: oklch(95% 0.003 30); }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 620;
+      letter-spacing: -0.01em;
+    }
+
+    /* Content */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .app-content::-webkit-scrollbar { width: 0; }
+
+    /* Progress */
+    .progress-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-card);
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .progress-label {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 510;
+    }
+    .progress-count {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 620;
+      letter-spacing: -0.01em;
+    }
+    .progress-count span { color: var(--accent); }
+    .progress-bar {
+      height: 6px;
+      background: oklch(94% 0.004 30);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* Card */
+    .card-stage {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      perspective: 800px;
+      min-height: 320px;
+    }
+    .flashcard {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 5 / 3.4;
+      position: relative;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .card-front {
+      background: var(--surface);
+      border: 1.5px solid oklch(92% 0.006 30);
+    }
+    .card-back {
+      background: linear-gradient(145deg, oklch(88% 0.06 15 / 0.18), oklch(88% 0.06 235 / 0.15));
+      transform: rotateY(180deg);
+      border: 1.5px solid oklch(92% 0.006 30);
+    }
+    .card-pos {
+      font-size: 12px;
+      font-weight: 550;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+      background: oklch(85% 0.06 12 / 0.18);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .card-word {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 620;
+      letter-spacing: -0.015em;
+      color: var(--fg);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .card-roman {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 450;
+      letter-spacing: 0.02em;
+    }
+    .card-hint {
+      position: absolute;
+      bottom: 14px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+    .card-meaning {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      margin-bottom: 10px;
+    }
+    .card-example {
+      font-size: 14px;
+      color: oklch(35% 0.015 260);
+      text-align: center;
+      line-height: 1.6;
+      max-width: 260px;
+    }
+    .card-example em {
+      font-style: normal;
+      color: var(--muted);
+      font-size: 12px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Actions */
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      padding-bottom: 84px;
+    }
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      border-radius: var(--radius);
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 550;
+      letter-spacing: 0.02em;
+      transition: all 0.15s;
+      background: var(--surface);
+      box-shadow: var(--shadow-card);
+    }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn .btn-icon {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+    .action-btn.dont-know { color: oklch(48% 0.13 22); }
+    .action-btn.dont-know .btn-icon { background: oklch(85% 0.10 22 / 0.20); }
+    .action-btn.dont-know:hover { background: oklch(85% 0.06 22 / 0.10); border-color: oklch(85% 0.10 22 / 0.30); }
+    .action-btn.fuzzy { color: oklch(55% 0.12 85); }
+    .action-btn.fuzzy .btn-icon { background: oklch(88% 0.10 85 / 0.20); }
+    .action-btn.fuzzy:hover { background: oklch(88% 0.06 85 / 0.10); border-color: oklch(88% 0.10 85 / 0.30); }
+    .action-btn.mastered { color: oklch(48% 0.12 150); }
+    .action-btn.mastered .btn-icon { background: oklch(85% 0.10 150 / 0.18); }
+    .action-btn.mastered:hover { background: oklch(85% 0.06 150 / 0.08); border-color: oklch(85% 0.10 150 / 0.25); }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6px 8px max(6px, env(safe-area-inset-bottom, 6px));
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .app-frame { position: relative; }
+    @media (min-width: 768px) {
+      .bottom-nav { position: absolute; }
+    }
+    @media (max-width: 767px) {
+      .app-frame { position: relative; }
+      .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; }
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 510;
+      letter-spacing: 0.02em;
+      transition: color 0.15s;
+      cursor: pointer;
+    }
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item.active { color: var(--accent); font-weight: 600; }
+    .nav-item:not(.active):hover { color: var(--fg); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(25% 0.02 260);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 550;
+      letter-spacing: 0.02em;
+      z-index: 100;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 430px) {
+      .card-word { font-size: 34px; }
+      .card-meaning { font-size: 24px; }
+      .flashcard { max-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="app-header">
+      <div class="header-left">
+        <a href="index.html" class="back-btn" aria-label="返回">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">今日复习</span>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <section class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">今日复习进度</span>
+          <span class="progress-count"><span id="done-count">5</span> / <span id="total-count">20</span></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:25%"></div></div>
+      </section>
+
+      <div class="card-stage">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="card-face card-front">
+            <span class="card-pos" id="card-pos">명사 · 名词</span>
+            <span class="card-word" id="card-word">사랑</span>
+            <span class="card-roman" id="card-roman">sa-rang</span>
+            <span class="card-hint">点击翻转查看释义</span>
+          </div>
+          <div class="card-face card-back">
+            <span class="card-meaning" id="card-meaning">爱</span>
+            <div class="card-example" id="card-example">
+              사랑은 모든 것을 이긴다
+              <em>爱能战胜一切</em>
+            </div>
+            <span class="card-hint">再次点击翻回</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="action-btn dont-know" onclick="answer('dont-know')">
+          <span class="btn-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+          不会
+        </button>
+        <button class="action-btn fuzzy" onclick="answer('fuzzy')">
+          <span class="btn-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </span>
+          模糊
+        </button>
+        <button class="action-btn mastered" onclick="answer('mastered')">
+          <span class="btn-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          已掌握
+        </button>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <span class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        复习
+      </span>
+      <a class="nav-item" href="word-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+        单词
+      </a>
+      <a class="nav-item" href="add-word.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        添加
+      </a>
+      <a class="nav-item" href="stats.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="2" width="4" height="18" rx="1"/></svg>
+        统计
+      </a>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const words = [
+      { ko:'사랑', roman:'sa-rang', pos:'명사 · 名词', zh:'爱', ex:'사랑은 모든 것을 이긴다', exZh:'爱能战胜一切', cat:'名词' },
+      { ko:'친구', roman:'chin-gu', pos:'명사 · 名词', zh:'朋友', ex:'친구와 함께 커피를 마셨어요', exZh:'和朋友一起喝了咖啡', cat:'名词' },
+      { ko:'예쁘다', roman:'ye-ppeu-da', pos:'형용사 · 形容词', zh:'漂亮的', ex:'오늘 정말 예쁘다', exZh:'今天真的很漂亮', cat:'形容词' },
+      { ko:'먹다', roman:'meok-da', pos:'동사 · 动词', zh:'吃', ex:'아침을 먹다', exZh:'吃早餐', cat:'动词' },
+      { ko:'크다', roman:'keu-da', pos:'형용사 · 形容词', zh:'大的', ex:'이 방은 정말 크다', exZh:'这个房间真的很大', cat:'形容词' },
+      { ko:'학교', roman:'hak-gyo', pos:'명사 · 名词', zh:'学校', ex:'학교에 가다', exZh:'去学校', cat:'名词' },
+      { ko:'공부하다', roman:'gong-bu-ha-da', pos:'동사 · 动词', zh:'学习', ex:'한국어를 공부하다', exZh:'学习韩语', cat:'动词' },
+      { ko:'좋다', roman:'jo-ta', pos:'형용사 · 形容词', zh:'好的', ex:'날씨가 좋다', exZh:'天气真好', cat:'形容词' },
+      { ko:'사람', roman:'sa-ram', pos:'명사 · 名词', zh:'人', ex:'좋은 사람이에요', exZh:'是个好人', cat:'名词' },
+      { ko:'가다', roman:'ga-da', pos:'동사 · 动词', zh:'去', ex:'집에 가다', exZh:'回家', cat:'动词' },
+      { ko:'물', roman:'mul', pos:'명사 · 名词', zh:'水', ex:'물을 마시다', exZh:'喝水', cat:'名词' },
+      { ko:'책', roman:'chaek', pos:'명사 · 名词', zh:'书', ex:'책을 읽다', exZh:'读书', cat:'名词' },
+      { ko:'가족', roman:'ga-jok', pos:'명사 · 名词', zh:'家庭', ex:'가족과 함께 살다', exZh:'和家人一起生活', cat:'名词' },
+      { ko:'음식', roman:'eum-sik', pos:'명사 · 名词', zh:'食物', ex:'한국 음식이 맛있다', exZh:'韩国食物很好吃', cat:'日常' },
+      { ko:'시간', roman:'si-gan', pos:'명사 · 名词', zh:'时间', ex:'시간이 없다', exZh:'没有时间', cat:'日常' },
+      { ko:'하다', roman:'ha-da', pos:'동사 · 动词', zh:'做', ex:'숙제를 하다', exZh:'做作业', cat:'动词' },
+      { ko:'오다', roman:'o-da', pos:'동사 · 动词', zh:'来', ex:'친구가 집에 오다', exZh:'朋友来家里', cat:'动词' },
+      { ko:'읽다', roman:'ik-da', pos:'동사 · 动词', zh:'读', ex:'신문을 읽다', exZh:'读报纸', cat:'动词' },
+      { ko:'중요하다', roman:'jung-yo-ha-da', pos:'형용사 · 形容词', zh:'重要的', ex:'건강이 중요하다', exZh:'健康很重要', cat:'TOPIK' },
+      { ko:'경험', roman:'gyeong-heom', pos:'명사 · 名词', zh:'经验', ex:'좋은 경험이었다', exZh:'是很好的经验', cat:'TOPIK' },
+      { ko:'발전', roman:'bal-jeon', pos:'명사 · 名词', zh:'发展', ex:'기술이 발전하다', exZh:'技术发展', cat:'TOPIK' },
+      { ko:'작다', roman:'jak-da', pos:'형용사 · 形容词', zh:'小的', ex:'방이 작다', exZh:'房间很小', cat:'形容词' },
+      { ko:'감사합니다', roman:'gam-sa-ham-ni-da', pos:'표현 · 日常用语', zh:'谢谢', ex:'도와주셔서 감사합니다', exZh:'感谢您的帮助', cat:'日常' },
+      { ko:'반갑다', roman:'ban-gap-da', pos:'형용사 · 形容词', zh:'高兴的', ex:'만나서 반갑습니다', exZh:'见到你很高兴', cat:'日常' },
+      { ko:'기쁘다', roman:'gi-ppeu-da', pos:'형용사 · 形容词', zh:'开心的', ex:'선물을 받아서 기쁘다', exZh:'收到礼物很开心', cat:'形容词' },
+      { ko:'배우다', roman:'bae-u-da', pos:'동사 · 动词', zh:'学习', ex:'한국어를 배우다', exZh:'学习韩语', cat:'动词' },
+      { ko:'만들다', roman:'man-deul-da', pos:'동사 · 动词', zh:'制作', ex:'요리를 만들다', exZh:'做料理', cat:'动词' },
+      { ko:'이야기', roman:'i-ya-gi', pos:'명사 · 名词', zh:'故事', ex:'재미있는 이야기', exZh:'有趣的故事', cat:'名词' },
+      { ko:'여행', roman:'yeo-haeng', pos:'명사 · 名词', zh:'旅行', ex:'한국으로 여행 가다', exZh:'去韩国旅行', cat:'日常' },
+      { ko:'날씨', roman:'nal-ssi', pos:'명사 · 名词', zh:'天气', ex:'오늘 날씨가 좋아요', exZh:'今天天气很好', cat:'日常' }
+    ];
+
+    const TOTAL = words.length;
+    let currentIdx = 0;
+    let reviewed = 0;
+    let isFlipped = false;
+
+    const card = document.getElementById('flashcard');
+    const toast = document.getElementById('toast');
+    const $ = id => document.getElementById(id);
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let order = shuffle(words.map((_, i) => i));
+    currentIdx = 0;
+
+    function renderCard() {
+      const w = words[order[currentIdx]];
+      $('card-pos').textContent = w.pos;
+      $('card-word').textContent = w.ko;
+      $('card-roman').textContent = w.roman;
+      $('card-meaning').textContent = w.zh;
+      $('card-example').innerHTML = w.ex + '<em>' + w.exZh + '</em>';
+      isFlipped = false;
+      card.classList.remove('flipped');
+    }
+
+    function flipCard() {
+      isFlipped = !isFlipped;
+      card.classList.toggle('flipped', isFlipped);
+    }
+
+    function updateProgress() {
+      const pct = Math.round((reviewed / TOTAL) * 100);
+      $('done-count').textContent = reviewed;
+      $('total-count').textContent = TOTAL;
+      $('progress-fill').style.width = pct + '%';
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    function answer(type) {
+      reviewed++;
+      updateProgress();
+
+      const labels = { 'dont-know':'标记为"不会"', 'fuzzy':'标记为"模糊"', 'mastered':'标记为"已掌握"' };
+      showToast(labels[type] + ' · ' + reviewed + '/' + TOTAL);
+
+      if (reviewed >= TOTAL) {
+        setTimeout(() => {
+          reviewed = 0;
+          order = shuffle(words.map((_, i) => i));
+          currentIdx = 0;
+          updateProgress();
+          renderCard();
+          showToast('本轮复习完成！重新开始 ✦');
+        }, 800);
+        return;
+      }
+
+      currentIdx++;
+      if (currentIdx >= order.length) currentIdx = 0;
+      setTimeout(() => renderCard(), 200);
+    }
+
+    $('total-count').textContent = TOTAL;
+    updateProgress();
+    renderCard();
+    updateProgress();
+    reviewed = 5;
+    updateProgress();
+  </script>
+</body>
+</html>

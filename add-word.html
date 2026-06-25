@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>添加单词 — 韩语单词卡</title>
+  <style>
+    :root {
+      --bg:      oklch(97% 0.004 30);
+      --surface: #ffffff;
+      --fg:      oklch(22% 0.015 260);
+      --muted:   oklch(50% 0.012 260);
+      --border:  oklch(92% 0.005 30);
+      --accent:  oklch(62% 0.14 12);
+      --accent-blue: oklch(62% 0.10 235);
+      --success: oklch(60% 0.13 150);
+      --warn:    oklch(68% 0.13 85);
+      --danger:  oklch(55% 0.16 22);
+      --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:    'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: oklch(94% 0.006 240);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: grid;
+      place-items: center;
+    }
+    .app-frame {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      max-height: 932px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+      position: relative;
+    }
+    @media (min-width: 768px) {
+      .app-frame { border-radius: 28px; height: min(100dvh - 40px, 880px); }
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px 10px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: background 0.15s;
+      text-decoration: none;
+    }
+    .back-btn:hover { background: oklch(95% 0.003 30); }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 620;
+      letter-spacing: -0.01em;
+    }
+
+    /* Content */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 100px;
+    }
+    .app-content::-webkit-scrollbar { width: 0; }
+
+    /* Form card */
+    .form-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .form-group label {
+      font-size: 13px;
+      font-weight: 550;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--fg);
+      background: oklch(98% 0.003 30);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(85% 0.06 12 / 0.15);
+      background: var(--surface);
+    }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+    .form-group select { cursor: pointer; }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: oklch(72% 0.005 260); }
+
+    .required-mark { color: var(--accent); font-weight: 600; }
+
+    /* Buttons */
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .btn {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: oklch(58% 0.14 12); }
+    .btn-secondary {
+      background: oklch(94% 0.004 30);
+      color: var(--fg);
+    }
+    .btn-secondary:hover { background: oklch(90% 0.005 30); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(25% 0.02 260);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 550;
+      letter-spacing: 0.02em;
+      z-index: 100;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6px 8px max(6px, env(safe-area-inset-bottom, 6px));
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    @media (max-width: 767px) {
+      .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; }
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 510;
+      letter-spacing: 0.02em;
+      transition: color 0.15s;
+      cursor: pointer;
+    }
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item.active { color: var(--accent); font-weight: 600; }
+    .nav-item:not(.active):hover { color: var(--fg); }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="app-header">
+      <a href="index.html" class="back-btn" aria-label="返回">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      <span class="header-title">添加单词</span>
+    </header>
+
+    <main class="app-content">
+      <form class="form-card" id="add-form" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label><span class="required-mark">*</span> 韩语单词</label>
+            <input type="text" id="ko" placeholder="예: 사랑" required />
+          </div>
+          <div class="form-group">
+            <label><span class="required-mark">*</span> 中文意思</label>
+            <input type="text" id="zh" placeholder="예: 爱" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>罗马音</label>
+            <input type="text" id="roman" placeholder="예: sa-rang" />
+          </div>
+          <div class="form-group">
+            <label><span class="required-mark">*</span> 词性</label>
+            <select id="pos" required>
+              <option value="">请选择</option>
+              <option value="명사 · 名词">名词</option>
+              <option value="동사 · 动词">动词</option>
+              <option value="형용사 · 形容词">形容词</option>
+              <option value="부사 · 副词">副词</option>
+              <option value="표현 · 日常用语">日常用语</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label><span class="required-mark">*</span> 分类</label>
+            <select id="cat" required>
+              <option value="">请选择</option>
+              <option value="日常">日常</option>
+              <option value="TOPIK">TOPIK</option>
+              <option value="动词">动词</option>
+              <option value="形容词">形容词</option>
+              <option value="名词">名词</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>例句</label>
+            <input type="text" id="ex" placeholder="예: 사랑은 모든 것을 이긴다" />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>例句翻译</label>
+            <input type="text" id="exZh" placeholder="예: 爱能战胜一切" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" onclick="clearForm()">清空</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </main>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="review.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        复习
+      </a>
+      <a class="nav-item" href="word-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+        单词
+      </a>
+      <span class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        添加
+      </span>
+      <a class="nav-item" href="stats.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="2" width="4" height="18" rx="1"/></svg>
+        统计
+      </a>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function clearForm() {
+      document.getElementById('add-form').reset();
+      showToast('表单已清空');
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const ko = document.getElementById('ko').value.trim();
+      const zh = document.getElementById('zh').value.trim();
+      if (!ko || !zh) return;
+      showToast('单词「' + ko + '」已保存 ✦');
+      setTimeout(() => document.getElementById('add-form').reset(), 600);
+    }
+  </script>
+</body>
+</html>

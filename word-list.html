@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>单词列表 — 韩语单词卡</title>
+  <style>
+    :root {
+      --bg:      oklch(97% 0.004 30);
+      --surface: #ffffff;
+      --fg:      oklch(22% 0.015 260);
+      --muted:   oklch(50% 0.012 260);
+      --border:  oklch(92% 0.005 30);
+      --accent:  oklch(62% 0.14 12);
+      --accent-blue: oklch(62% 0.10 235);
+      --success: oklch(60% 0.13 150);
+      --warn:    oklch(68% 0.13 85);
+      --danger:  oklch(55% 0.16 22);
+      --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:    'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: oklch(94% 0.006 240);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: grid;
+      place-items: center;
+    }
+    .app-frame {
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      max-height: 932px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+      position: relative;
+    }
+    @media (min-width: 768px) {
+      .app-frame { border-radius: 28px; height: min(100dvh - 40px, 880px); }
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px 10px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: background 0.15s;
+      text-decoration: none;
+    }
+    .back-btn:hover { background: oklch(95% 0.003 30); }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 620;
+      letter-spacing: -0.01em;
+    }
+    .header-count {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 510;
+    }
+
+    /* Search */
+    .search-wrap {
+      padding: 0 20px 8px;
+      flex-shrink: 0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      box-shadow: var(--shadow-card);
+      border: 1.5px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-box svg { flex-shrink: 0; color: var(--muted); }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--fg);
+      background: transparent;
+    }
+    .search-box input::placeholder { color: oklch(65% 0.008 260); }
+
+    /* Filter chips */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 4px 20px 12px;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .chip:hover { border-color: oklch(85% 0.06 12 / 0.40); color: var(--fg); }
+    .chip.active {
+      background: oklch(85% 0.06 12 / 0.20);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Word list */
+    .word-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .word-list::-webkit-scrollbar { width: 0; }
+    .word-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.12s;
+      cursor: default;
+    }
+    .word-item:active { transform: scale(0.985); }
+    .word-ko {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 620;
+      letter-spacing: -0.01em;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+    .word-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .word-zh {
+      font-size: 14px;
+      font-weight: 510;
+      color: var(--fg);
+    }
+    .word-roman {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      margin-top: 1px;
+    }
+    .status-badge {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 550;
+      letter-spacing: 0.03em;
+    }
+    .status-badge.mastered { background: oklch(85% 0.06 150 / 0.18); color: var(--success); }
+    .status-badge.learning { background: oklch(88% 0.06 85 / 0.18); color: var(--warn); }
+    .status-badge.new { background: oklch(92% 0.005 30); color: var(--muted); }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6px 8px max(6px, env(safe-area-inset-bottom, 6px));
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    @media (max-width: 767px) {
+      .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; }
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 510;
+      letter-spacing: 0.02em;
+      transition: color 0.15s;
+      cursor: pointer;
+    }
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item.active { color: var(--accent); font-weight: 600; }
+    .nav-item:not(.active):hover { color: var(--fg); }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="app-header">
+      <a href="index.html" class="back-btn" aria-label="返回">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      <span class="header-title">单词列表</span>
+      <span class="header-count" id="header-count">共 30 词</span>
+    </header>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="搜索韩语或中文…" oninput="filterWords()" />
+      </div>
+    </div>
+
+    <div class="filter-row" id="filter-row">
+      <button class="chip active" data-cat="全部" onclick="setFilter('全部', this)">全部</button>
+      <button class="chip" data-cat="日常" onclick="setFilter('日常', this)">日常</button>
+      <button class="chip" data-cat="TOPIK" onclick="setFilter('TOPIK', this)">TOPIK</button>
+      <button class="chip" data-cat="动词" onclick="setFilter('动词', this)">动词</button>
+      <button class="chip" data-cat="形容词" onclick="setFilter('形容词', this)">形容词</button>
+      <button class="chip" data-cat="名词" onclick="setFilter('名词', this)">名词</button>
+    </div>
+
+    <div class="word-list" id="word-list"></div>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="review.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        复习
+      </a>
+      <span class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+        单词
+      </span>
+      <a class="nav-item" href="add-word.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        添加
+      </a>
+      <a class="nav-item" href="stats.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="2" width="4" height="18" rx="1"/></svg>
+        统计
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    const words = [
+      { ko:'사랑', roman:'sa-rang', zh:'爱', cat:'名词', status:'mastered' },
+      { ko:'친구', roman:'chin-gu', zh:'朋友', cat:'名词', status:'mastered' },
+      { ko:'예쁘다', roman:'ye-ppeu-da', zh:'漂亮的', cat:'形容词', status:'learning' },
+      { ko:'먹다', roman:'meok-da', zh:'吃', cat:'动词', status:'mastered' },
+      { ko:'크다', roman:'keu-da', zh:'大的', cat:'形容词', status:'learning' },
+      { ko:'학교', roman:'hak-gyo', zh:'学校', cat:'名词', status:'mastered' },
+      { ko:'공부하다', roman:'gong-bu-ha-da', zh:'学习', cat:'动词', status:'learning' },
+      { ko:'좋다', roman:'jo-ta', zh:'好的', cat:'形容词', status:'new' },
+      { ko:'사람', roman:'sa-ram', zh:'人', cat:'名词', status:'new' },
+      { ko:'가다', roman:'ga-da', zh:'去', cat:'动词', status:'mastered' },
+      { ko:'물', roman:'mul', zh:'水', cat:'名词', status:'mastered' },
+      { ko:'책', roman:'chaek', zh:'书', cat:'名词', status:'learning' },
+      { ko:'가족', roman:'ga-jok', zh:'家庭', cat:'名词', status:'new' },
+      { ko:'음식', roman:'eum-sik', zh:'食物', cat:'日常', status:'mastered' },
+      { ko:'시간', roman:'si-gan', zh:'时间', cat:'日常', status:'learning' },
+      { ko:'하다', roman:'ha-da', zh:'做', cat:'动词', status:'mastered' },
+      { ko:'오다', roman:'o-da', zh:'来', cat:'动词', status:'new' },
+      { ko:'읽다', roman:'ik-da', zh:'读', cat:'动词', status:'learning' },
+      { ko:'중요하다', roman:'jung-yo-ha-da', zh:'重要的', cat:'TOPIK', status:'new' },
+      { ko:'경험', roman:'gyeong-heom', zh:'经验', cat:'TOPIK', status:'new' },
+      { ko:'발전', roman:'bal-jeon', zh:'发展', cat:'TOPIK', status:'new' },
+      { ko:'작다', roman:'jak-da', zh:'小的', cat:'形容词', status:'learning' },
+      { ko:'감사합니다', roman:'gam-sa-ham-ni-da', zh:'谢谢', cat:'日常', status:'mastered' },
+      { ko:'반갑다', roman:'ban-gap-da', zh:'高兴的', cat:'日常', status:'new' },
+      { ko:'기쁘다', roman:'gi-ppeu-da', zh:'开心的', cat:'形容词', status:'new' },
+      { ko:'배우다', roman:'bae-u-da', zh:'学习', cat:'动词', status:'learning' },
+      { ko:'만들다', roman:'man-deul-da', zh:'制作', cat:'动词', status:'new' },
+      { ko:'이야기', roman:'i-ya-gi', zh:'故事', cat:'名词', status:'learning' },
+      { ko:'여행', roman:'yeo-haeng', zh:'旅行', cat:'日常', status:'mastered' },
+      { ko:'날씨', roman:'nal-ssi', zh:'天气', cat:'日常', status:'learning' }
+    ];
+
+    let activeCat = '全部';
+
+    const statusLabels = { mastered:'已掌握', learning:'学习中', new:'新添加' };
+
+    function renderList(filtered) {
+      const container = document.getElementById('word-list');
+      const countEl = document.getElementById('header-count');
+      countEl.textContent = '共 ' + filtered.length + ' 词';
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">没有找到匹配的单词</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(w => `
+        <div class="word-item">
+          <span class="word-ko">${w.ko}</span>
+          <div class="word-info">
+            <div class="word-zh">${w.zh}</div>
+            <div class="word-roman">${w.roman}</div>
+          </div>
+          <span class="status-badge ${w.status}">${statusLabels[w.status]}</span>
+        </div>
+      `).join('');
+    }
+
+    function filterWords() {
+      const query = document.getElementById('search-input').value.trim().toLowerCase();
+      let filtered = words;
+      if (activeCat !== '全部') {
+        filtered = filtered.filter(w => w.cat === activeCat);
+      }
+      if (query) {
+        filtered = filtered.filter(w =>
+          w.ko.toLowerCase().includes(query) ||
+          w.zh.toLowerCase().includes(query) ||
+          w.roman.toLowerCase().includes(query)
+        );
+      }
+      renderList(filtered);
+    }
+
+    function setFilter(cat, el) {
+      activeCat = cat;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      filterWords();
+    }
+
+    renderList(words);
+  </script>
+</body>
+</html>
