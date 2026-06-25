@@ -1,0 +1,7 @@
+﻿node_modules/
+.vite/
+dist/
+*.artifact.json
+.DS_Store
+Thumbs.db
+*.log
